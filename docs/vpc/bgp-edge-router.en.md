@@ -327,7 +327,7 @@ BGP Configuration :
 | Fields | Type | Optional | Default Value | Description | Example |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `enabled` | `boolean` | Yes | `false` | Whether to enable BGP. | `true` |
-| `edgeRouterMode` | `boolean` | Yes | `false` | Enable edge router mode. | `true` |
+| `edgeRouterMode` | `boolean` | Yes | `false` | Enable edge router mode. Automatically update pod FIB about received routes from neighbor | `true` |
 | `routeServerClient` | `boolean` | Yes | `false` | Enable route server client mode. | `true` |
 | `image` | `string` | Yes | – | Container image for the BGP speaker daemon. | `docker.io/osrg/gobgp:latest` |
 | `asn` | `integer/int32` | Yes | – | BGP Autonomous System Number. Must be ≥ 0. | `65001` |
