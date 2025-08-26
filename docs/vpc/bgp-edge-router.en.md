@@ -433,7 +433,7 @@ Policy Allowed Configuration :
 
 | Fields | Type | Optional | Default Value | Description | Example |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `mode` | `string` | No | – | Policy mode for filtering: `all`, `none`, `filtered`, etc. | `filtered` |
+| `mode` | `string` | No | – | Policy mode for filtering: `all`, `none`, `filtered`, etc. When `mode: filtered` only prefixes allowed | `filtered` |
 | `prefixes` | `string array` | Yes | – | Prefix list when `mode: filtered`. Must be valid IPv4/IPv6 CIDRs. | `192.168.0.0/16` / `10.0.0.0/8` |
 
 Status
