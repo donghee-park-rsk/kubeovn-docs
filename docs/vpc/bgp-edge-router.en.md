@@ -25,6 +25,7 @@ bgp-edge-routers
 
 bgp-edge-router-advertisements
 - Adds advertising subnet
+- Adds advertising subnet route to VPC
 
 gobgp-configs
 - Add routing policy per peer
@@ -142,7 +143,7 @@ spec:
   policies:
     - snat: false
       subnets:
-        - vpc-test-subnet
+        - subnet100
   bgp:
     edgeRouterMode: true
     enabled: true
@@ -156,7 +157,7 @@ spec:
     enableGracefulRestart: true
 ```
 
-The above resource creates a Bgp Edge Router named ber for VPC `vpc-test` under the default namespace, and all Pods under the `subnet99` subnet (100.9.0.0/16) within `vpc-test` VPC will access the external network via the `macvlan1` .
+The above resource creates a Bgp Edge Router named ber for VPC `vpc-test` under the default namespace, and all Pods under the `subnet99` subnet (10.99.0.0/16) within `vpc-test` VPC will access the external network via the `macvlan1` .
 
 After the creation is complete, check out the Bgp Edge Router resource:
 
@@ -211,6 +212,26 @@ Peer            AS     Up/Down State       |#Received  Accepted
 10.101.0.10 65000 4d 00:23:12 Establ      |        2         2
 ```
 
+To view address set which use spec.policy and logical router policy:
+```shell
+$ kubectl ko nbctl lr-policy-list vpc-dh
+Routing Policies
+     31000                           ip4.dst == 10.100.0.0/16           allow
+     31000                           ip4.dst == 10.101.0.0/16           allow
+     31000                            ip4.dst == 10.99.0.0/16           allow
+     29100                  ip4.src == $BER.3bb7b07e93aa.ipv4         reroute                10.99.0.10, 10.99.0.11               bfd
+     29100                   ip4.src == $BER.3bb7b07e93aa_ip4         reroute                10.99.0.10, 10.99.0.11               bfd
+     29090                  ip4.src == $BER.3bb7b07e93aa.ipv4            drop
+     29090                   ip4.src == $BER.3bb7b07e93aa_ip4            drop
+
+$ kubectl ko nbctl list address_set
+_uuid               : b18ba940-2dba-446f-a973-cd37ae82dd3e
+addresses           : ["10.100.0.0/16"]
+external_ids        : {af="4", bgp-edge-router="default/ber", vendor=kube-ovn}
+name                : BER.3bb7b07e93aa.ipv4
+```
+
+
 ### Creating a Bgp Edge Router Advertisement
 ```yaml
 apiVersion: kubeovn.io/v1
@@ -222,12 +243,23 @@ spec:
   bgpEdgeRouter: "ber"
   subnet:
     - subnet100
+    - subnet99
 ```
 After the advertisement creation is complete, check out the Bgp Edge Router resource whether advertised properly:
 ```shell
 $ kubectl exec ber-54ff969988-fvbmg -c bgp-router-speaker -- gobgp global rib
    Network              Next Hop             AS_PATH              Age        Attrs
 *> 10.100.0.0/16        172.17.0.10                               00:04:49   [{Origin: i}]
+*> 10.99.0.0/16         172.17.0.10                               00:04:49   [{Origin: i}]
+```
+
+Advertised subnet added to address set which used for logical route policy that bgp edge router created:
+```shell
+$ kubectl ko nbctl list address_set
+_uuid               : b18ba940-2dba-446f-a973-cd37ae82dd3e
+addresses           : ["10.99.0.0/16", "10.100.0.0/16"]
+external_ids        : {af="4", bgp-edge-router="default/ber", vendor=kube-ovn}
+name                : BER.3bb7b07e93aa.ipv4
 ```
 
 ### Creating a gobgp config
